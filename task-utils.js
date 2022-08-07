@@ -12,7 +12,8 @@ const yaml = require('js-yaml')
 const {
   combineNycOptions,
   defaultNycOptions,
-  fileCoveragePlaceholder
+  fileCoveragePlaceholder,
+  initialCoverageData
 } = require('./common-utils')
 
 function readNycOptions(workingDirectory) {
@@ -364,11 +365,18 @@ function includeAllFiles(nycFilename, nycOptions) {
       // all good, this file exists in coverage object
       return
     }
-    debug('adding empty coverage for file %s', fullPath)
+
     changed = true
-    // insert placeholder object for now
-    const placeholder = fileCoveragePlaceholder(fullPath)
-    nycCoverage[fullPath] = placeholder
+    const coverageData = initialCoverageData(fullPath);
+
+    if (!coverageData) {
+      debug('adding empty coverage for file %s', fullPath)
+      // insert placeholder object for now
+      const placeholder = fileCoveragePlaceholder(fullPath)
+      nycCoverage[fullPath] = placeholder
+    } else {
+      nycCoverage[fullPath] = coverageData;
+    }
   })
 
   if (changed) {

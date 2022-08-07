@@ -1,4 +1,8 @@
 // @ts-check
+
+const babel = require("@babel/core");
+const istanbulInstrument = require("istanbul-lib-instrument");
+
 function stringToArray(prop, obj) {
   if (typeof obj[prop] === 'string') {
     obj[prop] = [obj[prop]]
@@ -44,6 +48,25 @@ const fileCoveragePlaceholder = (fullPath) => {
   }
 }
 
+const initialCoverageData = (fullPath) => {
+  let code;
+
+  // HACK: might be non-Javascript object, use a try/catch block
+  try {
+    ({ code } = babel.transformFileSync(fullPath));
+  } catch(error) {
+    return null;
+  }
+
+  const coverage = istanbulInstrument.readInitialCoverage(code);
+
+  if (!coverage || !coverage.coverageData) {
+    return null;
+  }
+
+  return coverage.coverageData;
+};
+
 const isPlaceholder = (entry) => {
   // when the file has been instrumented, its entry has "hash" property
   return !('hash' in entry)
@@ -65,5 +88,6 @@ module.exports = {
   combineNycOptions,
   defaultNycOptions,
   fileCoveragePlaceholder,
+  initialCoverageData,
   removePlaceholders
 }
